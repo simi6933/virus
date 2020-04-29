@@ -47,8 +47,6 @@ var sim = (function () {
   }
 
   function nextDay() {
-    currentStates.ill = 0;
-    currentStates.immune = 0;
     currentStates = infection(currentDay, parameters, currentStates);
     currentStates = progress(
       currentDay,
@@ -91,10 +89,12 @@ var sim = (function () {
     if (currentDay >= parameters.illnessPeriod)
       currentStates.immune +=
         statesOverTime.areIll[currentDay - parameters.illnessPeriod];
+    if (currentDay >= parameters.incubationPeriod)
+      currentStates.ill +=
+        statesOverTime.inIncubation[currentDay - parameters.incubationPeriod];
 
     return currentStates;
   }
-
   function getResults() {
     console.log("Healthy People: ", statesOverTime.areHealthy);
     console.log("People in incubations: ", statesOverTime.inIncubation);
@@ -118,90 +118,16 @@ var sim = (function () {
 
 var unittest = (function () {
   var tests = {
-    infectionTestNoInfection: function () {
-      // For R0 = 0 no one should get infected
-      return runInfectionTest(
-        1,
-        25,
-        { r0: 0, population: 10, incubationPeriod: 1, illnessPeriod: 1 },
-        { healthy: 9, incubation: 1, ill: 0, immune: 0 },
-        { healthy: 9, incubation: 1, ill: 0, immune: 0 }
-      );
+    initTest: function () {},
+
+    getResultsTest: function () {
+      console.log(sim.areHealthy);
     },
 
-    infectionTestAllInfected: function () {
-      // For an extreme high R0 everyone should be infected after the first day
-      return runInfectionTest(
-        1,
-        25,
-        [100, 10, 1, 1],
-        [9, 1, 0, 0],
-        [0, 10, 0, 0]
-      );
+    dummyFalseTest: function () {
+      return false;
     },
   };
-
-  function runInfectionTest(
-    repeats,
-    day,
-    parameters,
-    startingstates,
-    expectedEndstates
-  ) {
-    parameters = convertParameters(parameters);
-    startingstates = convertStates(startingstates);
-    expectedEndstates = convertStates(expectedEndstates);
-    while (repeats--) {
-      try {
-        startingStates = sim.infection(day, parameters, startingstates);
-      } catch (err) {
-        alert(err);
-        return false;
-      }
-    }
-    return isEquivalent(startingstates, expectedEndstates);
-  }
-
-  function convertParameters(parameters) {
-    if (Array.isArray(parameters)) {
-      parameters = {
-        r0: parameters[0],
-        population: parameters[1],
-        incubationPeriod: parameters[2],
-        illnessPeriod: parameters[3],
-      };
-    }
-    return parameters;
-  }
-
-  function convertStates(states) {
-    if (Array.isArray(states)) {
-      states = {
-        healthy: states[0],
-        incubation: states[1],
-        ill: states[2],
-        immune: states[3],
-      };
-    }
-    return states;
-  }
-
-  function isEquivalent(a, b) {
-    var aProps = Object.getOwnPropertyNames(a);
-    var bProps = Object.getOwnPropertyNames(b);
-    if (aProps.length != bProps.length) {
-      return false;
-    }
-    for (let i = 0; i < aProps.length; i++) {
-      if (a[aProps[i]] !== b[aProps[i]]) {
-        return false;
-      }
-    }
-
-    // If we made it this far, objects
-    // are considered equivalent
-    return true;
-  }
 
   function run() {
     var testResult = "Unit test results:\n";
