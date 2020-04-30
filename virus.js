@@ -26,8 +26,6 @@ var sim = (function () {
     currentStates.incubation = 1;
     currentStates.ill = 0;
     currentStates.immune = 0;
-    currentStates.daysUntilInfected = 0;
-    currentStates.daysUntilHealthy = 0;
     currentDay = 0;
     //    contractedPerDay = 0;
 
@@ -49,6 +47,8 @@ var sim = (function () {
   }
 
   function nextDay() {
+    currentStates.ill = 0;
+    currentStates.immune = 0;
     currentStates = infection(currentDay, parameters, currentStates);
     currentStates = progress(
       currentDay,
@@ -67,15 +67,18 @@ var sim = (function () {
   }
 
   function infection(currentDay, parameters, currentStates) {
+
     contractedPerDay =
       (currentStates.incubation + currentStates.ill) *
       (parameters.r0 /
         (parameters.incubationPeriod + parameters.illnessPeriod));
-    currentStates.healthy != 0
-      ? (currentStates.incubation +=
-          currentStates.healthy - (currentStates.healthy - contractedPerDay))
-      : ((currentStates.ill += currentStates.incubation),
+        console.log(contractedPerDay);
+
+    (currentStates.healthy != 0)
+      ? (currentStates.incubation += contractedPerDay)
+          : ((statesOverTime.areIll[currentDay + currentStates.incubationPeriod] = currentStates.incubation),
         (currentStates.incubation = 0));
+        
     currentStates.healthy - contractedPerDay <= 0
       ? ((currentStates.incubation += currentStates.healthy),
         (currentStates.healthy = 0))
