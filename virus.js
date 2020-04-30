@@ -15,12 +15,14 @@ var sim = (function () {
       document.getElementById("daysToCalculate").value
     );
 
+    // sot = statesOverTime
     statesOverTime = {};
     statesOverTime.areHealthy = [];
     statesOverTime.inIncubation = [];
     statesOverTime.areIll = [];
     statesOverTime.areImmune = [];
 
+    // cs = currentStates
     currentStates = {};
     currentStates.healthy = parameters.population - 1; // egyenlöre hardcodeoltam az egy megbetegedettet
     currentStates.incubation = 1;
@@ -74,15 +76,14 @@ var sim = (function () {
         (parameters.incubationPeriod + parameters.illnessPeriod));
         console.log(contractedPerDay);
 
-    (currentStates.healthy != 0)
-      ? (currentStates.incubation += contractedPerDay)
-          : ((statesOverTime.areIll[currentDay + currentStates.incubationPeriod] = currentStates.incubation),
-        (currentStates.incubation = 0));
-        
-    currentStates.healthy - contractedPerDay <= 0
-      ? ((currentStates.incubation += currentStates.healthy),
-        (currentStates.healthy = 0))
-      : (currentStates.healthy -= contractedPerDay);
+    if (currentStates.healthy - contractedPerDay <= 0) {
+      currentStates.incubation += currentStates.healthy;
+      currentStates.healthy = 0;
+    } else {
+      currentStates.incubation += contractedPerDay;
+      currentStates.healthy -= contractedPerDay;
+    }
+
 
     return currentStates;
   }
