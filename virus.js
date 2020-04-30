@@ -117,6 +117,7 @@ var sim = (function () {
 var unittest = (function () {
   var tests = {
     infectionTestNoInfection: function () {
+      // For R0 = 0 no one should get infected
       return runInfectionTest(
         1,
         25,
@@ -127,6 +128,7 @@ var unittest = (function () {
     },
 
     infectionTestAllInfected: function () {
+      // For an extreme high R0 everyone should be infected after the first day
       return runInfectionTest(
         1,
         25,
