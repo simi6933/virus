@@ -1,91 +1,208 @@
 var sim = (function () {
-
   function init() {
-    r0 = parseInt(document.getElementById("r0").value);
-    population = parseInt(document.getElementById("population").value);
-    incubationPeriod = parseInt(document.getElementById("incubationPeriod").value);
-    illnessPeriod = parseInt(document.getElementById("illnessPeriod").value);
-    daysToCalculate = parseInt(document.getElementById("daysToCalculate").value);
+    parameters = {};
+    parameters.r0 = parseInt(document.getElementById("r0").value);
+    parameters.population = parseInt(
+      document.getElementById("population").value
+    );
+    parameters.incubationPeriod = parseInt(
+      document.getElementById("incubationPeriod").value
+    );
+    parameters.illnessPeriod = parseInt(
+      document.getElementById("illnessPeriod").value
+    );
+    daysToCalculate = parseInt(
+      document.getElementById("daysToCalculate").value
+    );
 
-    areHealthy = [];
-    inIncubation = [];
-    areIll = [];
-    areImmune = [];
+    statesOverTime = {};
+    statesOverTime.areHealthy = [];
+    statesOverTime.inIncubation = [];
+    statesOverTime.areIll = [];
+    statesOverTime.areImmune = [];
 
-    healthy = (population - 1); // egyenlöre hardcodeoltam az egy megbetegedettet
-    incubation = 1;
-    ill = 0;
-    immune = 0;
+    currentStates = {};
+    currentStates.healthy = parameters.population - 1; // egyenlöre hardcodeoltam az egy megbetegedettet
+    currentStates.incubation = 1;
+    currentStates.ill = 0;
+    currentStates.immune = 0;
+    currentStates.daysUntilInfected = 0;
+    currentStates.daysUntilHealthy = 0;
     currentDay = 0;
-    contractedPerDay = 0;
+    //    contractedPerDay = 0;
 
     start();
   }
-  
-  function start() {
 
-    while(!(currentDay == daysToCalculate))
-    {
-      console.log("Current Day: " + currentDay + " | Days to Calculate: " + daysToCalculate);
+  function start() {
+    while (!(currentDay == daysToCalculate)) {
+      console.log(
+        "Current Day: " +
+          currentDay +
+          " | Days to Calculate: " +
+          daysToCalculate
+      );
       nextDay();
       currentDay++;
     }
     getResults();
   }
-  
+
   function nextDay() {
+    currentStates = infection(currentDay, parameters, currentStates);
+    currentStates = progress(
+      currentDay,
+      parameters,
+      currentStates,
+      statesOverTime
+    );
+    //    console.log(incubationPeriod + illnessPeriod);
 
-    contractedPerDay += (incubation + ill) * (r0 / (incubationPeriod + illnessPeriod));
-    console.log(incubationPeriod + illnessPeriod);
-    if(currentDay >= illnessPeriod) immune += areIll[currentDay - illnessPeriod];
-    if(currentDay >= incubationPeriod) ill += inIncubation[currentDay - incubationPeriod];
-
-    (healthy != 0) ? (incubation += (healthy - (healthy - contractedPerDay))) : (ill += incubation, incubation = 0);
-    ((healthy - contractedPerDay) <= 0) ? (incubation += healthy, healthy = 0) : (healthy -= contractedPerDay);
-
-    areHealthy[currentDay] = Math.round(healthy);
-    inIncubation[currentDay] = Math.round(incubation);
-    areIll[currentDay] = Math.round(ill);
-    areImmune[currentDay] = Math.round(immune);
+    statesOverTime.areHealthy[currentDay] = Math.round(currentStates.healthy);
+    statesOverTime.inIncubation[currentDay] = Math.round(
+      currentStates.incubation
+    );
+    statesOverTime.areIll[currentDay] = Math.round(currentStates.ill);
+    statesOverTime.areImmune[currentDay] = Math.round(currentStates.immune);
   }
-  
-  function getResults() {
 
-    console.log("Healthy People: ", areHealthy);
-    console.log("People in incubations: ", inIncubation);
-    console.log("Ill people: ", areIll);
-    console.log("Immune people: ", areImmune);
+  function infection(currentDay, parameters, currentStates) {
+    contractedPerDay =
+      (currentStates.incubation + currentStates.ill) *
+      (parameters.r0 /
+        (parameters.incubationPeriod + parameters.illnessPeriod));
+    currentStates.healthy != 0
+      ? (currentStates.incubation +=
+          currentStates.healthy - (currentStates.healthy - contractedPerDay))
+      : ((currentStates.ill += currentStates.incubation),
+        (currentStates.incubation = 0));
+    currentStates.healthy - contractedPerDay <= 0
+      ? ((currentStates.incubation += currentStates.healthy),
+        (currentStates.healthy = 0))
+      : (currentStates.healthy -= contractedPerDay);
+
+    return currentStates;
+  }
+
+  function progress(currentDay, parameters, currentStates, statesOverTime) {
+
+    if (currentDay >= parameters.incubationPeriod)
+    currentStates.ill +=
+      statesOverTime.inIncubation[currentDay - parameters.incubationPeriod];
+    if (currentDay >= parameters.illnessPeriod)
+      currentStates.immune +=
+        statesOverTime.areIll[currentDay - parameters.illnessPeriod];
+
+    return currentStates;
+  }
+
+  function getResults() {
+    console.log("Healthy People: ", statesOverTime.areHealthy);
+    console.log("People in incubations: ", statesOverTime.inIncubation);
+    console.log("Ill people: ", statesOverTime.areIll);
+    console.log("Immune people: ", statesOverTime.areImmune);
 
     return {
-      areHealthy: areHealthy,
-      inIncubation: inIncubation,
-      areIll: areIll,
-      areImmune: areImmune,
+      statesOverTime,
     };
   }
-  
+
   return {
     init: init,
     start: start,
     nextDay: nextDay,
     getResults: getResults,
+    infection: infection,
+    progress: progress,
   };
 })();
 
 var unittest = (function () {
   var tests = {
-    initTest: function () {
-      
+    infectionTestNoInfection: function () {
+      // For R0 = 0 no one should get infected
+      return runInfectionTest(
+        1,
+        25,
+        { r0: 0, population: 10, incubationPeriod: 1, illnessPeriod: 1 },
+        { healthy: 9, incubation: 1, ill: 0, immune: 0 },
+        { healthy: 9, incubation: 1, ill: 0, immune: 0 }
+      );
     },
 
-    getResultsTest: function () {
-      console.log(sim.areHealthy);
-    },
-
-    dummyFalseTest: function () {
-      return false;
+    infectionTestAllInfected: function () {
+      // For an extreme high R0 everyone should be infected after the first day
+      return runInfectionTest(
+        1,
+        25,
+        [100, 10, 1, 1],
+        [9, 1, 0, 0],
+        [0, 10, 0, 0]
+      );
     },
   };
+
+  function runInfectionTest(
+    repeats,
+    day,
+    parameters,
+    startingstates,
+    expectedEndstates
+  ) {
+    parameters = convertParameters(parameters);
+    startingstates = convertStates(startingstates);
+    expectedEndstates = convertStates(expectedEndstates);
+    while (repeats--) {
+      try {
+        startingStates = sim.infection(day, parameters, startingstates);
+      } catch (err) {
+        alert(err);
+        return false;
+      }
+    }
+    return isEquivalent(startingstates, expectedEndstates);
+  }
+
+  function convertParameters(parameters) {
+    if (Array.isArray(parameters)) {
+      parameters = {
+        r0: parameters[0],
+        population: parameters[1],
+        incubationPeriod: parameters[2],
+        illnessPeriod: parameters[3],
+      };
+    }
+    return parameters;
+  }
+
+  function convertStates(states) {
+    if (Array.isArray(states)) {
+      states = {
+        healthy: states[0],
+        incubation: states[1],
+        ill: states[2],
+        immune: states[3],
+      };
+    }
+    return states;
+  }
+
+  function isEquivalent(a, b) {
+    var aProps = Object.getOwnPropertyNames(a);
+    var bProps = Object.getOwnPropertyNames(b);
+    if (aProps.length != bProps.length) {
+      return false;
+    }
+    for (let i = 0; i < aProps.length; i++) {
+      if (a[aProps[i]] !== b[aProps[i]]) {
+        return false;
+      }
+    }
+
+    // If we made it this far, objects
+    // are considered equivalent
+    return true;
+  }
 
   function run() {
     var testResult = "Unit test results:\n";
