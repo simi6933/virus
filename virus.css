@@ -3,13 +3,51 @@ body {
   width: 100%;
   height: 100%;
   margin: 0;
+  display: flex;
+  flex-direction: row;
 }
 
 body {
-  background-color: #333;
+  background-color: #ddd;
 }
 
-.form {
+h1,
+h2,
+p {
+  margin: 5px 0;
+}
+
+input {
+  width: 70px;
+}
+
+div.form {
   background-color: #ccc;
-  width: 300px;
+  width: 400px;
+  padding: 10px;
+}
+
+.healthy {
+  background-color: green;
+}
+
+.incubation {
+  background-color: yellow;
+}
+
+.ill {
+  background-color: red;
+}
+
+.immune {
+  background-color: gray;
+}
+
+div.chart {
+  width: 100%;
+}
+
+canvas#chart {
+  width: 100%;
+  height: 100%;
 }

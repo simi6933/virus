@@ -43,7 +43,7 @@ var sim = (function () {
       nextDay();
       currentDay++;
     }
-    getResults();
+    chart.drawChart(getResults());
   }
 
   function nextDay() {
@@ -85,12 +85,14 @@ var sim = (function () {
   }
 
   function progress(currentDay, parameters, currentStates, statesOverTime) {
-    if (currentDay >= parameters.incubationPeriod)
+    if (currentDay >= parameters.incubationPeriod) {
       currentStates.ill +=
         statesOverTime.inIncubation[currentDay - parameters.incubationPeriod];
-    if (currentDay >= parameters.illnessPeriod)
+    }
+    if (currentDay >= parameters.illnessPeriod) {
       currentStates.immune +=
         statesOverTime.areIll[currentDay - parameters.illnessPeriod];
+    }
 
     return currentStates;
   }
@@ -101,9 +103,7 @@ var sim = (function () {
     console.log("Ill people: ", statesOverTime.areIll);
     console.log("Immune people: ", statesOverTime.areImmune);
 
-    return {
-      statesOverTime,
-    };
+    return statesOverTime;
   }
 
   return {
@@ -159,7 +159,38 @@ var unittest = (function () {
         return false;
       }
     }
-    return isEquivalent(startingstates, expectedEndstates);
+    var result = isEquivalent(startingstates, expectedEndstates);
+    if (result === false) {
+      console.log("Expected vs actual: ", expectedEndstates, startingstates);
+      sim.getResults();
+    }
+    return result;
+  }
+
+  function runProgressTest(
+    repeats,
+    day,
+    parameters,
+    startingstates,
+    expectedEndstates
+  ) {
+    parameters = convertParameters(parameters);
+    startingstates = convertStates(startingstates);
+    expectedEndstates = convertStates(expectedEndstates);
+    while (repeats--) {
+      try {
+        startingStates = sim.infection(day, parameters, startingstates);
+      } catch (err) {
+        alert(err);
+        return false;
+      }
+    }
+    var result = isEquivalent(startingstates, expectedEndstates);
+    if (result === false) {
+      console.log("Expected vs actual: ", expectedEndstates, startingstates);
+      sim.getResults();
+    }
+    return result;
   }
 
   function convertParameters(parameters) {
@@ -213,6 +244,72 @@ var unittest = (function () {
 
   return {
     run: run,
+  };
+})();
+
+var chart = (function () {
+  const canvasColors = {
+    grid: "black",
+    areHealthy: "green",
+    inIncubation: "yellow",
+    areIll: "red",
+    areImmune: "gray",
+  };
+  const canvas = document.getElementById("chart");
+  const ctx = canvas.getContext("2d");
+  const margin = 50;
+
+  function drawChart(data) {
+    var chartWidth = document.getElementById("chart").offsetWidth;
+    var chartHeight = document.getElementById("chart").offsetHeight;
+    canvas.width = chartWidth;
+    canvas.height = chartHeight;
+    console.log("Canvas height", canvas.height);
+    var maxX = 0;
+    Object.values(data).forEach((arr) => {
+      var max = Math.max(...arr);
+      maxX = Math.max(maxX, max);
+    });
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 2;
+    drawAxes(margin, canvasColors.grid);
+    Object.keys(data).forEach((state) => {
+      drawDataLine(data[state].length, data[state], canvasColors[state]);
+    });
+
+    function drawAxes(margin, color) {
+      //      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.moveTo(0, chartHeight - margin);
+      ctx.lineTo(chartWidth, chartHeight - margin);
+      ctx.moveTo(margin, 0);
+      ctx.lineTo(margin, chartHeight);
+      ctx.stroke();
+    }
+
+    function drawDataLine(size, data, color) {
+      console.log("DrawDataLine", size, data, color);
+      const scaleX = (chartHeight - 2 * margin) / maxX;
+      const scaleY = (chartWidth - 2 * margin) / size;
+      data.forEach((x, index) => {
+        if (index === 0) {
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          ctx.moveTo(margin, chartHeight - margin - x * scaleX);
+        } else {
+          ctx.lineTo(
+            margin + index * scaleY,
+            chartHeight - margin - x * scaleX
+          );
+          ctx.stroke();
+        }
+      });
+    }
+  }
+
+  return {
+    drawChart: drawChart,
   };
 })();
 

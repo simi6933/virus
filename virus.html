@@ -3,37 +3,24 @@
     <link rel="stylesheet" type="text/css" href="virus.css"></link>
   </head>
   <body>
-    <div>
           <div id="parameters" class="form">
-            <h1>Parameters</h1>
-            <p>R0: <span id="R0"></span></p>
-            <input type="text" id="r0"> <br>
+            <h2>Parameters</h2>
+            <p>R0: <input type="text" id="r0"></p>
+            <p>Days: <input type="text" id="daysToCalculate"></p>            
+            <p>Population: <input type="text" id="population"></p>
+            <p>Incubation period (days): <input type="text" id="incubationPeriod"></p>
+            <p>Illness period (days): <input type="text" id="illnessPeriod"></p>
+            <button onclick="sim.init()">Start!</button>
             <h2>Stats</h2>
-            <p>Day: <span id="day">1</span></p>
-            <input type="text" id="daysToCalculate"> <br>
-            <p>Population: <span id="pop"></span></p>
-            <input type="text" id="population"> <br>
-            <p>Incubation period (days): <span id="incubation"></span></p>
-            <input type="text" id="incubationPeriod"> <br>
-            <p>Illness period (days): <span id="illness"></span></p>
-            <input type="text" id="illnessPeriod"> <br>
-            <p>No symptoms: <span id="asympt"></span></p>
-            <p>No symptoms total: <span id="total_asympt"></span></p>
-            <p>Light symptoms: <span id="light"></span></p>
-            <p>Light symptoms total: <span id="total_light"></span></p>
-            <p>Hospitalized: <span id="hospital"></span></p>
-            <p>Hospitalized max: <span id="max_hospital"></span></p>
-            <p>Hospitalized total: <span id="total_hospital"></span></p>
-            <p>Immune: <span id="immune"></span></p>
-            <p>Dead: <span id="dead"></span></p>
-            <p>Relapse: <span id="relapse"></span></p>
-            <p><strong>Total: <span id="total"></span></strong></p>
-            <button onclick="sim.init()">Try it</button>
+            <p>Healthy: <span class="healthy">&nbsp;&nbsp;</span></p>
+            <p>Incubation: <span class="incubation">&nbsp;&nbsp;</span></p>
+            <p>Ill: <span class="ill">&nbsp;&nbsp;</span></p>
+            <p>Immune: <span class="immune">&nbsp;&nbsp;</span></p>
           </div>
 
-          <div id="chart">
+          <div class="chart">
+            <canvas id="chart"></canvas>
           </div>
-    </div>
     <script src="virus.js"></script>
   </body>
 </html>
