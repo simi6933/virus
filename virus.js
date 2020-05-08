@@ -265,11 +265,9 @@ var chart = (function () {
     canvas.width = chartWidth;
     canvas.height = chartHeight;
     console.log("Canvas height", canvas.height);
-    var maxX = 0;
-    Object.values(data).forEach((arr) => {
-      var max = Math.max(...arr);
-      maxX = Math.max(maxX, max);
-    });
+    var maxY = Object.values(data)
+      .reduce((all, arr) => all.concat(arr))
+      .reduce((a, b) => Math.max(a, b));
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 2;
@@ -290,17 +288,17 @@ var chart = (function () {
 
     function drawDataLine(size, data, color) {
       console.log("DrawDataLine", size, data, color);
-      const scaleX = (chartHeight - 2 * margin) / maxX;
-      const scaleY = (chartWidth - 2 * margin) / size;
-      data.forEach((x, index) => {
+      const scaleX = (chartWidth - 2 * margin) / size;
+      const scaleY = (chartHeight - 2 * margin) / maxY;
+      data.forEach((y, index) => {
         if (index === 0) {
           ctx.beginPath();
           ctx.strokeStyle = color;
-          ctx.moveTo(margin, chartHeight - margin - x * scaleX);
+          ctx.moveTo(margin, chartHeight - margin - y * scaleY);
         } else {
           ctx.lineTo(
-            margin + index * scaleY,
-            chartHeight - margin - x * scaleX
+            margin + index * scaleX,
+            chartHeight - margin - y * scaleY
           );
           ctx.stroke();
         }
